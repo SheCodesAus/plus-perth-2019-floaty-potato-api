@@ -1,3 +1,5 @@
+import django_heroku
+
 """
 Django settings for popcorn_culture project.
 
@@ -147,3 +149,6 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer', 'rest_framework.renderers.BrowsableAPIRenderer'],
     'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication',],
 }
+
+# Activate Django-Heroku.
+django_heroku.settings(locals())
