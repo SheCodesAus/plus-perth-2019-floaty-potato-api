@@ -1,1 +1,1 @@
-web: waitress-serve popcorn_culture.wsgi:application
+web: waitress-serve --port=80 popcorn_culture.wsgi:application
