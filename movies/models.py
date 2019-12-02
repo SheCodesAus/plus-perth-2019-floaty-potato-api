@@ -43,9 +43,9 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     date_of_birth = models.DateField(max_length=8, null=True)
     avatar = models.ImageField(upload_to = 'avatar/', default = 'popcorn.jpg', null=True)
-    preferred_genres = models.ManyToManyField(Genre, null=True)
-    preferred_providers = models.ManyToManyField(Provider, null=True)
-    watchlist = models.ManyToManyField(Movie, null=True)
+    preferred_genres = models.ManyToManyField(Genre)
+    preferred_providers = models.ManyToManyField(Provider)
+    watchlist = models.ManyToManyField(Movie)
 
     def __str__(self):
         return self.user.username
