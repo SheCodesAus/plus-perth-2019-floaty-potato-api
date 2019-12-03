@@ -9,11 +9,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 import django_filters.rest_framework
+# from datetime import datetime, timedelta
+
 from .models import Movie, Classification, Provider, Genre
 from .serializers import MovieSerializer, GenreSerializer, ProviderSerializer, ClassificationSerializer, UserSerializer, ProfileSerializer
 from .models import Profile
 from .permissions import IsAdminOrSelf, IsAdminUser
 from .tokens import account_activation_token
+# import requests
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
