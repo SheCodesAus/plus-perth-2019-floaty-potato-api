@@ -88,25 +88,82 @@ def activate(request, uidb64, token):
     else:
         return HttpResponse('Activation link is invalid!')
 
-def importmovieids(request):
-    response = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22page%22:1,%22page_size%22:100%7D')
-    data = response.json()
-    for i in range((len(data['items']))):
-        jwid = data['items'][i]['id']
-        title = data['items'][i]['title']
-        MovieId(id=jwid, title=title).save()
-    return render(request, 'fetchmovieids.html')
-
 def populatemoviedata(request):
-    response = requests.get('https://apis.justwatch.com/content/titles/movie/100/locale/en_AU')
-    data = response.json()
-    classification = Classification.objects.get(pk='1')
-    movie = Movie(
-        id=data['id'],
-        title= data['title'], 
-        summary= data['short_description'], 
-        duration=timedelta(minutes=(data.get('runtime'))), 
-        release_date=data.get('cinema_release_date'), 
-        classification=classification)
-    movie.save()
+    '''
+    import providers and populate database
+    '''
+    providerslist = requests.get('https://apis.justwatch.com/content/providers/locale/en_AU')
+    providers = providerslist.json()
+    for b in range (len(providers)):
+        provider = Provider(
+            name=providers[b]['clear_name'],
+            id=providers[b]['id']
+            )
+        provider.save()
+    
+    '''
+    import classifications and populate database
+    '''
+    classificationlist = requests.get('https://apis.justwatch.com/content/age_certifications?country=AU&object_type=movie')
+    classifications = classificationlist.json()
+    for c in range (len(classifications)):
+        classification = Classification(
+            text=classifications[c]['technical_name'],
+            id=classifications[c]['id']
+        )
+        classification.save()
+
+    '''
+    import genres and populate database
+
+    '''
+    genrelist = requests.get('https://apis.justwatch.com/content/genres/locale/en_AU')
+    genres = genrelist.json()
+    for g in range (len(genres)):
+        genre = Genre(
+            name=genres[g]['translation'],
+            id=genres[g]['id']
+        )
+        genre.save()
+
+    '''
+    import movies and create movie objects
+    '''
+    responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22page%22:1,%22page_size%22:100%7D')
+    popularmovies = responseone.json()
+    for i in range ((len(popularmovies['items']))):
+        id = popularmovies['items'][i]['id']
+        response = requests.get('https://apis.justwatch.com/content/titles/movie/{}/locale/en_AU'.format(id))
+        data = response.json()
+
+        for j in range((len(data['offers']))):
+            if data['offers'][j]['monetization_type'] == 'flatrate':
+                service = Provider.objects.get(pk=(data['offers'][j]['provider_id']))
+
+                ''' link classification to movie '''
+                classification = Classification.objects.get(text=data.get('age_certification'))
+                
+                ''' create movie object '''
+
+                movie = Movie(
+                    id=id,
+                    title= data['title'], 
+                    summary= data['short_description'], 
+                    duration=timedelta(minutes=(data.get('runtime'))), 
+                    release_date=data.get('cinema_release_date'), 
+                    classification=classification
+                    )
+                movie.save()
+
+                ''' link provider to movie '''
+
+                movie.provider.add(service)
+
+                ''' link genre to  movie '''
+                for g in range (len(data['genre_ids'])):
+                    genre = Genre.objects.get(pk=(data['genre_ids'][g]))
+                    movie.genre.add(genre)
+                
+                movie.save()
     return render(request, 'populatemovie.html')
+

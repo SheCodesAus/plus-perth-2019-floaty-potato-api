@@ -49,13 +49,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'url', 'username', 'email', 'first_name', 'password', 'last_name','profile']
+        fields = ['id', 'url', 'username', 'email', 'first_name', 'password', 'last_name', 'profile']
         extra_kwargs = {'password': {'write_only': True}}
     
     def create(self, validated_data):
 
         """
-        Make user is_active fales, and set password
+        Make user is_active false, and set password
         """
         profile_data = validated_data.pop('profile')
         password = validated_data.pop('password')
@@ -63,7 +63,6 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         user = User(**validated_data)
         user.set_password(password)
         user.save()
-
         """
         Send user account activation email
         """
