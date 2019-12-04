@@ -27,8 +27,8 @@ class Provider(models.Model):
 class Movie(models.Model):
     title = models.CharField(max_length=100, null=False)
     summary = models.CharField(max_length=5000, null=False)
-    duration = models.DurationField(blank=True)
-    release_date = models.DateField(blank=True)
+    duration = models.DurationField(blank=True, null=True)
+    release_date = models.DateField(blank=True, null=True)
     image = models.ImageField(upload_to = 'movies/', default = 'no-img.png')
     classification = models.ForeignKey(Classification, on_delete=models.DO_NOTHING)
     genre = models.ManyToManyField(Genre)
@@ -42,10 +42,10 @@ User = get_user_model()
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     date_of_birth = models.DateField(max_length=8, null=True)
-    avatar = models.ImageField(upload_to = 'avatar/', default = 'popcorn.jpg')
+    avatar = models.ImageField(upload_to = 'avatar/', default = 'popcorn.jpg', null=True)
     preferred_genres = models.ManyToManyField(Genre)
     preferred_providers = models.ManyToManyField(Provider)
     watchlist = models.ManyToManyField(Movie)
 
     def __str__(self):
-        return self.name
+        return self.user.username
