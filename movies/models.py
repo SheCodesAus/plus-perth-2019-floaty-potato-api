@@ -11,6 +11,7 @@ class MovieId(models.Model):
         return self.title
 
 class Classification(models.Model):
+    id = models.IntegerField(primary_key=True)
     text = models.CharField(max_length=10, null=False)
     image = models.ImageField(upload_to = 'classifications/', default = 'no-img.png')
 
@@ -18,6 +19,7 @@ class Classification(models.Model):
         return self.text
 
 class Genre(models.Model):
+    id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=50, null=False)
     image = models.ImageField(upload_to = 'genres/', default = 'no-img.png')
 
@@ -25,6 +27,7 @@ class Genre(models.Model):
         return self.name
 
 class Provider(models.Model):
+    id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=50, null=False)
     url = models.URLField(blank=True)
     image = models.ImageField(upload_to = 'providers/', default = 'no-img.png')
@@ -38,7 +41,7 @@ class Movie(models.Model):
     duration = models.DurationField(blank=True, null=True)
     release_date = models.DateField(blank=True, null=True)
     image = models.ImageField(upload_to = 'movies/', default = 'no-img.png')
-    classification = models.ForeignKey(Classification, on_delete=models.DO_NOTHING, blank=True)
+    classification = models.ForeignKey(Classification, on_delete=models.DO_NOTHING, null=True)
     genre = models.ManyToManyField(Genre, blank=True)
     provider = models.ManyToManyField(Provider, blank=True)
 
