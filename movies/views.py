@@ -18,6 +18,9 @@ from .permissions import IsAdminOrSelf, IsAdminUser
 from .tokens import account_activation_token
 import requests
 
+from django.core.files import File
+from django.core.files.temp import NamedTemporaryFile
+
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
@@ -129,12 +132,12 @@ def populatemoviedata(request):
     '''
     import movies and create movie objects
     '''
-    responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22providers%22:[%22nfx%22],%22page%22:1,%22page_size%22:10%7D')
+    responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22providers%22:[%22nfx%22],%22page%22:1,%22page_size%22:110%7D')
     popularmovies = responseone.json()
-    # for i in range ((len(popularmovies['items']))):
-    # id = popularmovies['items'][i]['id']
-    for i in range (1):
-        id = '322949'
+    for i in range ((len(popularmovies['items']))):
+        id = popularmovies['items'][i]['id']
+    # for i in range (1):
+    #     id = '6666'
         data = requests.get('https://apis.justwatch.com/content/titles/movie/{}/locale/en_AU'.format(id)).json()
 
         ''' define movie's classification '''
@@ -146,13 +149,23 @@ def populatemoviedata(request):
         ''' create movie object '''
         movie = Movie(
             id=id,
-            title= data['title'], 
-            summary= data['short_description'], 
+            title= data.get('title'), 
+            summary= data.get('short_description'), 
             duration=timedelta(minutes=(data.get('runtime'))), 
             release_date=data.get('cinema_release_date'), 
             classification=classification
             )
         movie.save()
+
+        ''' save movie poster '''
+        if data.get('poster'):
+            poster = data.get('poster')[:-10]
+            r=requests.get('https://images.justwatch.com'+poster+'/s592')
+            img_temp = NamedTemporaryFile(delete=True)
+            img_temp.write(r.content)
+            img_temp.flush()
+
+            movie.image.save("movies/{}.jpg".format(poster), File(img_temp), save=True)
         
         ''' link provider to movie '''
 

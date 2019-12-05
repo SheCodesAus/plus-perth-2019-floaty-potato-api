@@ -35,10 +35,10 @@ class Provider(models.Model):
 
 class Movie(models.Model):
     title = models.CharField(max_length=100, null=False)
-    summary = models.CharField(max_length=5000, null=False)
+    summary = models.CharField(max_length=5000, null=True)
     duration = models.DurationField(blank=True, null=True)
     release_date = models.DateField(blank=True, null=True)
-    image = models.ImageField(upload_to = 'movies/', default = 'no-img.png')
+    image = models.ImageField(upload_to = '', default = 'no-img.png')
     classification = models.ForeignKey(Classification, on_delete=models.DO_NOTHING, null=True)
     genre = models.ManyToManyField(Genre, blank=True)
     provider = models.ManyToManyField(Provider, blank=True)
