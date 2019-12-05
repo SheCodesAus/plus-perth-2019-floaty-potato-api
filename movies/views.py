@@ -89,42 +89,42 @@ def activate(request, uidb64, token):
         return HttpResponse('Activation link is invalid!')
 
 def populatemoviedata(request):
-    '''
-    import providers and populate database
-    '''
-    providerslist = requests.get('https://apis.justwatch.com/content/providers/locale/en_AU')
-    providers = providerslist.json()
-    for b in range (len(providers)):
-        provider = Provider(
-            name=providers[b]['clear_name'],
-            id=providers[b]['id']
-            )
-        provider.save()
+    # '''
+    # import providers and populate database
+    # '''
+    # providerslist = requests.get('https://apis.justwatch.com/content/providers/locale/en_AU')
+    # providers = providerslist.json()
+    # for b in range (len(providers)):
+    #     provider = Provider(
+    #         name=providers[b]['clear_name'],
+    #         id=providers[b]['id']
+    #         )
+    #     provider.save()
 
-    '''
-    import classifications and populate database
-    '''
-    classificationlist = requests.get('https://apis.justwatch.com/content/age_certifications?country=AU&object_type=movie')
-    classifications = classificationlist.json()
-    for c in range (len(classifications)):
-        classification = Classification(
-            text=classifications[c]['technical_name'],
-            id=classifications[c]['id']
-        )
-        classification.save()
+    # '''
+    # import classifications and populate database
+    # '''
+    # classificationlist = requests.get('https://apis.justwatch.com/content/age_certifications?country=AU&object_type=movie')
+    # classifications = classificationlist.json()
+    # for c in range (len(classifications)):
+    #     classification = Classification(
+    #         text=classifications[c]['technical_name'],
+    #         id=classifications[c]['id']
+    #     )
+    #     classification.save()
 
-    '''
-    import genres and populate database
+    # '''
+    # import genres and populate database
 
-    '''
-    genrelist = requests.get('https://apis.justwatch.com/content/genres/locale/en_AU')
-    genres = genrelist.json()
-    for g in range (len(genres)):
-        genre = Genre(
-            name=genres[g]['translation'],
-            id=genres[g]['id']
-        )
-        genre.save()
+    # '''
+    # genrelist = requests.get('https://apis.justwatch.com/content/genres/locale/en_AU')
+    # genres = genrelist.json()
+    # for g in range (len(genres)):
+    #     genre = Genre(
+    #         name=genres[g]['translation'],
+    #         id=genres[g]['id']
+    #     )
+    #     genre.save()
 
     '''
     import movies and create movie objects
@@ -134,25 +134,15 @@ def populatemoviedata(request):
     # for i in range ((len(popularmovies['items']))):
     # id = popularmovies['items'][i]['id']
     for i in range (1):
-        id = '44864'
+        id = '322949'
         data = requests.get('https://apis.justwatch.com/content/titles/movie/{}/locale/en_AU'.format(id)).json()
-        '''extract providers '''
-        providerdata = data.get('offers')
-        genredata = data.get('genre_ids')
-        service = None
-        if providerdata:
-            for j in range(len(data['offers'])):
-                if data['offers'][j]['monetization_type'] == 'flatrate':
-                    service = Provider.objects.get(pk=(data['offers'][j]['provider_id']))
-        if genredata:
-            for g in range (len(data['genre_ids'])):
-                genre = Genre.objects.get(pk=(data['genre_ids'][g]))
 
-        ''' link classification to movie '''
+        ''' define movie's classification '''
         if data.get('age_certification'):
             classification = Classification.objects.get(text=data.get('age_certification'))
         else:
             classification = None
+        
         ''' create movie object '''
         movie = Movie(
             id=id,
@@ -163,13 +153,22 @@ def populatemoviedata(request):
             classification=classification
             )
         movie.save()
-        print(movie)
+        
         ''' link provider to movie '''
-        if service:
-            movie.provider.add(service)
-        ''' link genre to  movie '''
-        if genredata:
-            movie.genre.add(genre)              
+
+        providers = data.get('offers')
+        if providers:
+            for p in range(len(providers)):
+                if providers[p]['monetization_type'] == 'flatrate':
+                    movie.provider.add(Provider.objects.get(pk=(providers[p]['provider_id'])))
+        
+        ''' link genres to movie '''
+        genres = data.get('genre_ids')
+        if genres:
+            for g in range (len(genres)):
+                movie.genre.add(Genre.objects.get(pk=genres[g]))   
+
         movie.save()
+
     return render(request, 'populatemovie.html')
 
