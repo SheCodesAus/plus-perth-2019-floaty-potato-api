@@ -100,7 +100,7 @@ def populatemoviedata(request):
             id=providers[b]['id']
             )
         provider.save()
-    
+
     '''
     import classifications and populate database
     '''
@@ -129,41 +129,47 @@ def populatemoviedata(request):
     '''
     import movies and create movie objects
     '''
-    responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22page%22:1,%22page_size%22:100%7D')
+    responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22providers%22:[%22nfx%22],%22page%22:1,%22page_size%22:10%7D')
     popularmovies = responseone.json()
-    for i in range ((len(popularmovies['items']))):
-        id = popularmovies['items'][i]['id']
-        response = requests.get('https://apis.justwatch.com/content/titles/movie/{}/locale/en_AU'.format(id))
-        data = response.json()
+    # for i in range ((len(popularmovies['items']))):
+    # id = popularmovies['items'][i]['id']
+    for i in range (1):
+        id = '44864'
+        data = requests.get('https://apis.justwatch.com/content/titles/movie/{}/locale/en_AU'.format(id)).json()
+        '''extract providers '''
+        providerdata = data.get('offers')
+        genredata = data.get('genre_ids')
+        service = None
+        if providerdata:
+            for j in range(len(data['offers'])):
+                if data['offers'][j]['monetization_type'] == 'flatrate':
+                    service = Provider.objects.get(pk=(data['offers'][j]['provider_id']))
+        if genredata:
+            for g in range (len(data['genre_ids'])):
+                genre = Genre.objects.get(pk=(data['genre_ids'][g]))
 
-        for j in range((len(data['offers']))):
-            if data['offers'][j]['monetization_type'] == 'flatrate':
-                service = Provider.objects.get(pk=(data['offers'][j]['provider_id']))
-
-                ''' link classification to movie '''
-                classification = Classification.objects.get(text=data.get('age_certification'))
-                
-                ''' create movie object '''
-
-                movie = Movie(
-                    id=id,
-                    title= data['title'], 
-                    summary= data['short_description'], 
-                    duration=timedelta(minutes=(data.get('runtime'))), 
-                    release_date=data.get('cinema_release_date'), 
-                    classification=classification
-                    )
-                movie.save()
-
-                ''' link provider to movie '''
-
-                movie.provider.add(service)
-
-                ''' link genre to  movie '''
-                for g in range (len(data['genre_ids'])):
-                    genre = Genre.objects.get(pk=(data['genre_ids'][g]))
-                    movie.genre.add(genre)
-                
-                movie.save()
+        ''' link classification to movie '''
+        if data.get('age_certification'):
+            classification = Classification.objects.get(text=data.get('age_certification'))
+        else:
+            classification = None
+        ''' create movie object '''
+        movie = Movie(
+            id=id,
+            title= data['title'], 
+            summary= data['short_description'], 
+            duration=timedelta(minutes=(data.get('runtime'))), 
+            release_date=data.get('cinema_release_date'), 
+            classification=classification
+            )
+        movie.save()
+        print(movie)
+        ''' link provider to movie '''
+        if service:
+            movie.provider.add(service)
+        ''' link genre to  movie '''
+        if genredata:
+            movie.genre.add(genre)              
+        movie.save()
     return render(request, 'populatemovie.html')
 
