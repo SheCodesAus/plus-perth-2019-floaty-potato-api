@@ -14,17 +14,17 @@ Content Serializers
 class GenreSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Genre
-        fields = ['name', 'image']
+        fields = ['id', 'name', 'image']
 
 class ClassificationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Classification
-        fields = ['text', 'image']
+        fields = ['id', 'text', 'image']
 
 class ProviderSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Provider
-        fields = ['name', 'url', 'image']
+        fields = ['id', 'name', 'url', 'image']
 
 class MovieSerializer(serializers.HyperlinkedModelSerializer):
     provider = ProviderSerializer (many=True)
@@ -33,7 +33,7 @@ class MovieSerializer(serializers.HyperlinkedModelSerializer):
     
     class Meta:
         model = Movie
-        fields = ['title', 'summary', 'duration', 'release_date', 'image', 'provider', 'genre', 'classification']
+        fields = ['id', 'title', 'summary', 'duration', 'release_date', 'image', 'provider', 'genre', 'classification']
 
 
 """""
@@ -42,7 +42,7 @@ User  Serializers
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['date_of_birth', 'avatar', 'preferred_genres', 'preferred_providers', 'watchlist']
+        fields = ['id', 'date_of_birth', 'avatar', 'preferred_genres', 'preferred_providers', 'watchlist']
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     profile = ProfileSerializer(many=False, required=True)
@@ -81,7 +81,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         """
         Create linked user profile
         """
-        Profile.objects.create(user=user, **profile_data)
+        # Profile.objects.create(user=user, **profile_data)
         return user
 
     def update(self, instance, validated_data):
