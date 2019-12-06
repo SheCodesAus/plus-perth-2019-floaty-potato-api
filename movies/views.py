@@ -16,7 +16,11 @@ from .serializers import MovieSerializer, GenreSerializer, ProviderSerializer, C
 from .models import Profile
 from .permissions import IsAdminOrSelf, IsAdminUser
 from .tokens import account_activation_token
-# import requests
+import requests
+import os
+from dotenv import load_dotenv
+from django.conf import settings
+load_dotenv()
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
@@ -87,3 +91,19 @@ def activate(request, uidb64, token):
         return HttpResponse('Thank you for your email confirmation. Now you can login your account.')
     else:
         return HttpResponse('Activation link is invalid!')
+
+
+def movieomdbdata(request):
+    omdbapi = settings.OMDB_API_KEY
+    response = requests.get(f'http://www.omdbapi.com/?t=guardians+of+the+galaxy&apikey={omdbapi}')
+    data = response.json()
+    return render(request, 'moviedata.html', {
+        'title' : data['Title'],
+        'year' : data['Year'],
+        'ratings' : data['Ratings'],
+    })
+
+# def movieposter(request):
+#     omdbapi = settings.OMDB_API_KEY
+#     poster = requests.get(f'img.omdbapi.com/?i=tt3896198&h=600&apikey={omdbapi}')
+#     return render(request, 'moviedata.html', poster)
