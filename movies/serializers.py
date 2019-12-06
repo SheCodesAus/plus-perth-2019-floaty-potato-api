@@ -57,12 +57,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         """
         Make user is_active fales, and set password
         """
-        profile_data = validated_data.pop('profile')
+        # profile_data = validated_data.pop('profile')
         password = validated_data.pop('password')
         validated_data['is_active'] = False
         user = User(**validated_data)
         user.set_password(password)
         user.save()
+        print('user saved')
 
         """
         Send user account activation email
@@ -78,11 +79,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                     mail_subject, message, to=[to_email]
         )
         email.send()
+        print('email sends')
 
         """
         Create linked user profile
         """
-        Profile.objects.create(user=user, **profile_data)
+        # Profile.objects.create(user=user, **profile_data)
+        # print(profile_data)
         return user
 
     def update(self, instance, validated_data):
