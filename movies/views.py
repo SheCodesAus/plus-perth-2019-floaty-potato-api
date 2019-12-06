@@ -1,14 +1,20 @@
+
+import requests
+import django_filters.rest_framework
+
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.utils.encoding import force_text
 from django.utils.http import urlsafe_base64_decode
+from django.core.files import File
+from django.core.files.temp import NamedTemporaryFile
+
 from rest_framework.views import APIView
 from rest_framework import viewsets, filters, generics
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
-import django_filters.rest_framework
 from datetime import datetime, timedelta
 
 from .models import Movie, Classification, Provider, Genre, MovieId
@@ -16,10 +22,7 @@ from .serializers import MovieSerializer, GenreSerializer, ProviderSerializer, C
 from .models import Profile
 from .permissions import IsAdminOrSelf, IsAdminUser
 from .tokens import account_activation_token
-import requests
 
-from django.core.files import File
-from django.core.files.temp import NamedTemporaryFile
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
@@ -91,97 +94,100 @@ def activate(request, uidb64, token):
     else:
         return HttpResponse('Activation link is invalid!')
 
+def importrelationreferences(request):
+    '''
+    import providers and populate database
+    '''
+    providerslist = requests.get('https://apis.justwatch.com/content/providers/locale/en_AU')
+    providers = providerslist.json()
+    for b in range (len(providers)):
+        provider = Provider(
+            name=providers[b]['clear_name'],
+            id=providers[b]['id']
+            )
+        provider.save()
+
+    '''
+    import classifications and populate database
+    '''
+    classificationlist = requests.get('https://apis.justwatch.com/content/age_certifications?country=AU&object_type=movie')
+    classifications = classificationlist.json()
+    for c in range (len(classifications)):
+        classification = Classification(
+            text=classifications[c]['technical_name'],
+            id=classifications[c]['id']
+        )
+        classification.save()
+
+    '''
+    import genres and populate database
+
+    '''
+    genrelist = requests.get('https://apis.justwatch.com/content/genres/locale/en_AU')
+    genres = genrelist.json()
+    for g in range (len(genres)):
+        genre = Genre(
+            name=genres[g]['translation'],
+            id=genres[g]['id']
+        )
+        genre.save()
+
+    return HttpResponse(status=201)
+
 def populatemoviedata(request):
-    # '''
-    # import providers and populate database
-    # '''
-    # providerslist = requests.get('https://apis.justwatch.com/content/providers/locale/en_AU')
-    # providers = providerslist.json()
-    # for b in range (len(providers)):
-    #     provider = Provider(
-    #         name=providers[b]['clear_name'],
-    #         id=providers[b]['id']
-    #         )
-    #     provider.save()
-
-    # '''
-    # import classifications and populate database
-    # '''
-    # classificationlist = requests.get('https://apis.justwatch.com/content/age_certifications?country=AU&object_type=movie')
-    # classifications = classificationlist.json()
-    # for c in range (len(classifications)):
-    #     classification = Classification(
-    #         text=classifications[c]['technical_name'],
-    #         id=classifications[c]['id']
-    #     )
-    #     classification.save()
-
-    # '''
-    # import genres and populate database
-
-    # '''
-    # genrelist = requests.get('https://apis.justwatch.com/content/genres/locale/en_AU')
-    # genres = genrelist.json()
-    # for g in range (len(genres)):
-    #     genre = Genre(
-    #         name=genres[g]['translation'],
-    #         id=genres[g]['id']
-    #     )
-    #     genre.save()
-
     '''
     import movies and create movie objects
     '''
-    responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22providers%22:[%22nfx%22],%22page%22:1,%22page_size%22:110%7D')
-    popularmovies = responseone.json()
-    for i in range ((len(popularmovies['items']))):
-        id = popularmovies['items'][i]['id']
-    # for i in range (1):
-    #     id = '6666'
-        data = requests.get('https://apis.justwatch.com/content/titles/movie/{}/locale/en_AU'.format(id)).json()
+    for pagenum in range (1,6):
+        responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22providers%22:[%22nfx%22,%22stn%22,%22ftp%22,%22prv%22,%20%22dnp%22,%22ivw%22,%22sbs%22,%22tpl%22],%22page%22:{},%22page_size%22:2%7D'.format(pagenum))
+        popularmovies = responseone.json()
+        for i in range ((len(popularmovies['items']))):
+            id = popularmovies['items'][i]['id']
 
-        ''' define movie's classification '''
-        if data.get('age_certification'):
-            classification = Classification.objects.get(text=data.get('age_certification'))
-        else:
-            classification = None
-        
-        ''' create movie object '''
-        movie = Movie(
-            id=id,
-            title= data.get('title'), 
-            summary= data.get('short_description'), 
-            duration=timedelta(minutes=(data.get('runtime'))), 
-            release_date=data.get('cinema_release_date'), 
-            classification=classification
-            )
-        movie.save()
+            data = requests.get('https://apis.justwatch.com/content/titles/movie/{}/locale/en_AU'.format(id)).json()
 
-        ''' save movie poster '''
-        if data.get('poster'):
-            poster = data.get('poster')[:-10]
-            r=requests.get('https://images.justwatch.com'+poster+'/s592')
-            img_temp = NamedTemporaryFile(delete=True)
-            img_temp.write(r.content)
-            img_temp.flush()
+            ''' fetch movie's classification '''
+            if data.get('age_certification'):
+                classification = Classification.objects.get(text=data.get('age_certification'))
+            else:
+                classification = None
+            
+            ''' create movie object '''
+            movie = Movie(
+                id=id,
+                title= data.get('title'), 
+                summary= data.get('short_description'), 
+                duration=timedelta(minutes=(data.get('runtime'))), 
+                release_date=data.get('cinema_release_date'), 
+                classification=classification
+                )
+            movie.save()
 
-            movie.image.save("movies/{}.jpg".format(poster), File(img_temp), save=True)
-        
-        ''' link provider to movie '''
+            ''' save movie poster '''
+            if data.get('poster'):
+                poster = data.get('poster')[:-10]
+                imagename = "movies{}.jpg".format(poster)
+                r=requests.get('https://images.justwatch.com'+poster+'/s592')
+                img_temp = NamedTemporaryFile(delete=True)
+                img_temp.write(r.content)
+                img_temp.flush()
+                movie.image.save(imagename, File(img_temp), save=True)
+            
+            ''' link provider to movie '''
 
-        providers = data.get('offers')
-        if providers:
-            for p in range(len(providers)):
-                if providers[p]['monetization_type'] == 'flatrate':
-                    movie.provider.add(Provider.objects.get(pk=(providers[p]['provider_id'])))
-        
-        ''' link genres to movie '''
-        genres = data.get('genre_ids')
-        if genres:
-            for g in range (len(genres)):
-                movie.genre.add(Genre.objects.get(pk=genres[g]))   
+            providers = data.get('offers')
+            if providers:
+                for p in range(len(providers)):
+                    if providers[p]['monetization_type'] == 'flatrate':
+                        movie.provider.add(Provider.objects.get(pk=(providers[p]['provider_id'])))
+            
+            ''' link genres to movie '''
+            genres = data.get('genre_ids')
+            if genres:
+                for g in range (len(genres)):
+                    movie.genre.add(Genre.objects.get(pk=genres[g]))   
 
-        movie.save()
+            movie.save()
 
-    return render(request, 'populatemovie.html')
+    return HttpResponse(status=201)
 
