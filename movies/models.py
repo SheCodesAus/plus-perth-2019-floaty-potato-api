@@ -3,13 +3,6 @@ from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-class MovieId(models.Model):
-    id = models.IntegerField(primary_key=True)
-    title = models.CharField(max_length=100)
-
-    def __str__ (self):
-        return self.title
-
 class Classification(models.Model):
     id = models.IntegerField(primary_key=True)
     text = models.CharField(max_length=10, null=False)
