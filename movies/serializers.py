@@ -14,17 +14,17 @@ Content Serializers
 class GenreSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Genre
-        fields = ['name', 'image']
+        fields = ['id', 'name', 'image']
 
 class ClassificationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Classification
-        fields = ['text', 'image']
+        fields = ['id', 'text', 'image']
 
 class ProviderSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Provider
-        fields = ['name', 'url', 'image']
+        fields = ['id', 'name', 'url', 'image']
 
 class MovieSerializer(serializers.HyperlinkedModelSerializer):
     provider = ProviderSerializer (many=True)
@@ -33,38 +33,38 @@ class MovieSerializer(serializers.HyperlinkedModelSerializer):
     
     class Meta:
         model = Movie
-        fields = ['title', 'summary', 'duration', 'release_date', 'image', 'provider', 'genre', 'classification']
+        fields = ['id', 'title', 'summary', 'duration', 'release_date', 'image', 'provider', 'genre', 'classification']
 
 
 """""
 User  Serializers
 """""
 class ProfileSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
     class Meta:
         model = Profile
-        fields = ['date_of_birth', 'avatar', 'preferred_genres', 'preferred_providers', 'watchlist']
+        fields = ['id', 'user', 'date_of_birth', 'avatar', 'preferred_genres', 'preferred_providers', 'watchlist']
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
-    profile = ProfileSerializer(many=False, required=True)
+    profile = ProfileSerializer(many=False, required=False)
 
     class Meta:
         model = User
-        fields = ['id', 'url', 'username', 'email', 'first_name', 'password', 'last_name','profile']
+        fields = ['id', 'url', 'username', 'email', 'first_name', 'last_name', 'password', 'profile']
         extra_kwargs = {'password': {'write_only': True}}
     
     def create(self, validated_data):
 
         """
-        Make user is_active fales, and set password
+        Make user is_active false, and set password
         """
-        # profile_data = validated_data.pop('profile')
+        profile_data = validated_data.pop('profile')
         password = validated_data.pop('password')
         validated_data['is_active'] = False
         user = User(**validated_data)
         user.set_password(password)
         user.save()
-        print('user saved')
-
+        print(profile_data)
         """
         Send user account activation email
         """
@@ -79,13 +79,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
                     mail_subject, message, to=[to_email]
         )
         email.send()
-        print('email sends')
 
-        """
-        Create linked user profile
-        """
-        # Profile.objects.create(user=user, **profile_data)
-        # print(profile_data)
         return user
 
     def update(self, instance, validated_data):
