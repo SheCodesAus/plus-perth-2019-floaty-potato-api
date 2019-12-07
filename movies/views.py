@@ -17,7 +17,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from datetime import datetime, timedelta
 
-from .models import Movie, Classification, Provider, Genre
+from .models import Movie, Classification, Provider, Genre, MovieId
 from .serializers import MovieSerializer, GenreSerializer, ProviderSerializer, ClassificationSerializer, UserSerializer, ProfileSerializer
 from .models import Profile
 from .permissions import IsAdminOrSelf, IsAdminUser
