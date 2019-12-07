@@ -5,9 +5,7 @@ __pycache__/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-env/
-*.py
-.venv/*
-venv/*
-venv
+env
 .venv
+.env
+# media/movies/poster
