@@ -40,9 +40,10 @@ class MovieSerializer(serializers.HyperlinkedModelSerializer):
 User  Serializers
 """""
 class ProfileSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
     class Meta:
         model = Profile
-        fields = ['id', 'date_of_birth', 'avatar', 'preferred_genres', 'preferred_providers', 'watchlist']
+        fields = ['id', 'user', 'date_of_birth', 'avatar', 'preferred_genres', 'preferred_providers', 'watchlist']
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     profile = ProfileSerializer(many=False, required=False)
@@ -63,6 +64,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         user = User(**validated_data)
         user.set_password(password)
         user.save()
+        print(profile_data)
         """
         Send user account activation email
         """

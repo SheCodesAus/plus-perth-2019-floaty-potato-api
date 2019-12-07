@@ -139,7 +139,7 @@ def populatemoviedata(request):
     import movies and create movie objects
     '''
     for pagenum in range (1,6):
-        responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22providers%22:[%22nfx%22,%22stn%22,%22ftp%22,%22prv%22,%20%22dnp%22,%22ivw%22,%22sbs%22,%22tpl%22],%22page%22:{},%22page_size%22:2%7D'.format(pagenum))
+        responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22monetization_types%22:[%22flatrate%22],%22providers%22:[%22nfx%22,%22ftp%22,%22stn%22,%22prv%22,%22dnp%22,%22ivw%22,%22sbs%22,%22tpl%22],%22page%22:{},%22page_size%22:1000%7D'.format(pagenum))
         popularmovies = responseone.json()
         for i in range ((len(popularmovies['items']))):
             id = popularmovies['items'][i]['id']
