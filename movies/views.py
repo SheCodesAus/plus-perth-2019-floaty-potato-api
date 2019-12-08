@@ -77,6 +77,16 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
 
+    def get_permissions(self):
+        permission_classes=[]
+        if self.action == 'create' or self.action == 'retrieve' or self.action == 'list':
+            permission_classes = [AllowAny]
+        elif self.action == 'update' or self.action == 'partial_update':
+            permission_classes = [IsAdminOrSelf]
+        elif or self.action == 'destroy':
+            permission_classes = [IsAdminUser]
+        return [permission() for permission in permission_classes]
+
 
 def activate(request, uidb64, token):    
     """
@@ -141,8 +151,8 @@ def populatemoviedata(request):
     '''
     import movies and create movie objects
     '''
-    for pagenum in range (1,6):
-        responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22monetization_types%22:[%22flatrate%22],%22providers%22:[%22nfx%22,%22ftp%22,%22stn%22,%22prv%22,%22dnp%22,%22ivw%22,%22sbs%22,%22tpl%22],%22page%22:{},%22page_size%22:1000%7D'.format(pagenum))
+    for pagenum in range (21,26):
+        responseone = requests.get('https://apis.justwatch.com/content/titles/en_AU/popular?body=%7B%22content_types%22:[%22movie%22],%22monetization_types%22:[%22flatrate%22],%22providers%22:[%22nfx%22,%22ftp%22,%22stn%22,%22prv%22,%22dnp%22,%22ivw%22,%22sbs%22,%22tpl%22],%22page%22:{},%22page_size%22:100%7D'.format(pagenum))
         popularmovies = responseone.json()
         for i in range ((len(popularmovies['items']))):
             id = popularmovies['items'][i]['id']
