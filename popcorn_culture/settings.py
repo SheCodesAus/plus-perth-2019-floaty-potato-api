@@ -62,7 +62,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    "*",
+    *,
 ]
 
 CORS_ALLOW_METHODS = [
