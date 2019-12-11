@@ -1,6 +1,7 @@
 
 import requests
-import django_filters.rest_framework
+# import django_filters.rest_framework
+from django_filters.rest_framework import DjangoFilterBackend
 
 from django.shortcuts import render
 from django.contrib.auth.models import User
@@ -27,8 +28,10 @@ from .tokens import account_activation_token
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["title"]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['provider','genre', 'classification']
+    search_fields = ['title']
+    ordering_fields = ['title']
     renderer_classes = [JSONRenderer]
 
 class GenreViewSet(viewsets.ModelViewSet):
