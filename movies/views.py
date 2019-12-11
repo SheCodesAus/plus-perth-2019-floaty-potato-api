@@ -80,15 +80,13 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
 
-    def get_permissions(self):
-        permission_classes=[]
-        if self.action == 'create' or self.action == 'retrieve' or self.action == 'list':
-            permission_classes = [AllowAny]
-        elif self.action == 'update' or self.action == 'partial_update':
-            permission_classes = [IsAdminOrSelf]
-        elif self.action == 'destroy':
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
+    # def get_permissions(self):
+    #     permission_classes=[]
+    #     if self.action == 'create' or self.action == 'retrieve' or self.action == 'list':
+    #         permission_classes = [AllowAny]
+    #     elif self.action == 'update' or self.action == 'partial_update' or self.action == 'destroy':
+    #         permission_classes = [IsAdminOrSelf]
+
 
 
 def activate(request, uidb64, token):    
