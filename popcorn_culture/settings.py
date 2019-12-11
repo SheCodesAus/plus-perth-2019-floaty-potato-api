@@ -62,7 +62,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    '*',
+    'https://popcornculture-staging.herokuapp.com',
 ]
 
 CORS_ALLOW_METHODS = [
