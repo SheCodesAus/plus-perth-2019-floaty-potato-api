@@ -61,9 +61,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ORIGIN_WHITELIST = [
-    'https://popcornculture-staging.herokuapp.com',
-]
+CORS_ORIGIN_ALLOW_ALL = True
+
+ALLOWED_HOSTS = ['*']
 
 CORS_ALLOW_METHODS = [
     'DELETE',
